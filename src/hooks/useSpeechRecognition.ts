@@ -1,5 +1,45 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 
+// Post-process transcript to fix common speech recognition errors
+const postProcessTranscript = (text: string): string => {
+  let processed = text;
+
+  // Common homophones and corrections for technical terms
+  const corrections: Record<string, string> = {
+    // Common tech terms
+    "Jay script": "JavaScript",
+    "javascript": "JavaScript",
+    "react": "React",
+    "node": "Node",
+    "G I T": "Git",
+    "get": "Git", // when talking about version control
+    "github": "GitHub",
+    "CS S": "CSS",
+    "H T M L": "HTML",
+    // Common words
+    "their": "there", // context-dependent, but "there" is more common in technical explanations
+    "too": "to",
+    "its": "it's",
+  };
+
+  // Apply corrections (case-insensitive)
+  Object.entries(corrections).forEach(([wrong, right]) => {
+    const regex = new RegExp(`\\b${wrong}\\b`, 'gi');
+    processed = processed.replace(regex, right);
+  });
+
+  // Ensure first letter is capitalized
+  if (processed.length > 0) {
+    processed = processed.charAt(0).toUpperCase() + processed.slice(1);
+  }
+
+  // Fix spacing around punctuation
+  processed = processed.replace(/\s+([.,!?])/g, '$1');
+  processed = processed.replace(/([.,!?])(\w)/g, '$1 $2');
+
+  return processed;
+};
+
 interface UseSpeechRecognitionReturn {
   transcript: string;
   isListening: boolean;
@@ -37,16 +77,17 @@ export const useSpeechRecognition = (): UseSpeechRecognitionReturn => {
       setIsSupported(true);
       const recognition = new SpeechRecognition();
 
-      // Mobile-optimized settings
-      recognition.continuous = !mobile; // iOS Safari works better with continuous=false
+      // Optimized settings for maximum accuracy
+      recognition.continuous = !mobile;
       recognition.interimResults = true;
       recognition.lang = "en-US";
 
-      // Only set maxAlternatives if supported
+      // Request 5 alternatives for best accuracy
       try {
-        recognition.maxAlternatives = 1;
+        recognition.maxAlternatives = 5;
+        console.log("✅ maxAlternatives set to 5");
       } catch (e) {
-        console.log("⚠️ maxAlternatives not supported");
+        console.log("⚠️ maxAlternatives not supported, using default (1)");
       }
 
       recognition.onstart = () => {
@@ -61,20 +102,42 @@ export const useSpeechRecognition = (): UseSpeechRecognitionReturn => {
 
         for (let i = event.resultIndex; i < event.results.length; i++) {
           const result = event.results[i];
-          const transcriptPiece = result[0].transcript;
+
+          // Log alternatives for debugging
+          if (result.length > 1) {
+            console.log("🔍 Alternatives:", Array.from({ length: result.length }, (_, j) => ({
+              text: result[j].transcript,
+              confidence: ((result[j].confidence || 0) * 100).toFixed(1) + "%"
+            })));
+          }
+
+          // Select best alternative by confidence
+          let bestTranscript = result[0].transcript;
+          let bestConfidence = result[0].confidence || 0;
+
+          for (let j = 1; j < result.length; j++) {
+            const alt = result[j];
+            const conf = alt.confidence || 0;
+            if (conf > bestConfidence) {
+              bestTranscript = alt.transcript;
+              bestConfidence = conf;
+              console.log(`🎯 Switched to alternative ${j}: "${bestTranscript}" (${(conf * 100).toFixed(1)}%)`);
+            }
+          }
+
+          // Apply post-processing
+          const cleaned = postProcessTranscript(bestTranscript);
 
           if (result.isFinal) {
-            console.log("✅ Final transcript piece:", transcriptPiece);
-            // Add space before new sentence if needed
+            console.log("✅ Final:", cleaned, `(confidence: ${(bestConfidence * 100).toFixed(1)}%)`);
             const needsSpace = finalTranscriptRef.current.length > 0 &&
               !finalTranscriptRef.current.endsWith(" ");
-            finalTranscriptRef.current += (needsSpace ? " " : "") + transcriptPiece;
+            finalTranscriptRef.current += (needsSpace ? " " : "") + cleaned;
           } else {
-            interimTranscript += transcriptPiece;
+            interimTranscript += cleaned;
           }
         }
 
-        // Combine final and interim transcripts with proper spacing
         const combinedTranscript = finalTranscriptRef.current +
           (interimTranscript && finalTranscriptRef.current ? " " : "") +
           interimTranscript;

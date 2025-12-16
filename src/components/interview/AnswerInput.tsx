@@ -13,6 +13,7 @@ interface AnswerInputProps {
 
 export const AnswerInput = ({ value, onChange, onSubmit, isLoading }: AnswerInputProps) => {
   const { transcript, isListening, isSupported, error, startListening, stopListening, resetTranscript } = useSpeechRecognition();
+  const mobile = /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini/i.test(navigator.userAgent);
 
   useEffect(() => {
     if (transcript) {
@@ -90,6 +91,11 @@ export const AnswerInput = ({ value, onChange, onSubmit, isLoading }: AnswerInpu
       <div className="flex items-center justify-between gap-3 flex-wrap">
         <span className="text-sm text-muted-foreground">
           {isSupported ? "Use voice or type • Ctrl + Enter to submit" : "Press Ctrl + Enter to submit"}
+          {isSupported && mobile && (
+            <span className="block text-xs mt-1 text-primary">
+              💡 Pro tip: Speak in complete sentences, pause naturally, and check the transcript before submitting
+            </span>
+          )}
         </span>
         <Button
           onClick={onSubmit}
