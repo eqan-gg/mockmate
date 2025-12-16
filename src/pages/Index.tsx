@@ -6,6 +6,7 @@ import { AnswerInput } from "@/components/interview/AnswerInput";
 import { FeedbackCard } from "@/components/interview/FeedbackCard";
 import { ResultsCard } from "@/components/interview/ResultsCard";
 import { DiagnosticsPanel } from "@/components/DiagnosticsPanel";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import { interviewQuestions, evaluateAnswer, calculateFinalResult } from "@/data/interviewQuestions";
 import type { Evaluation, FinalResult } from "@/types/interview";
 
