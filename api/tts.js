@@ -9,8 +9,14 @@ export default async function handler(req, res) {
     const { text, voiceId = 'pNInz6obpgDQGcFmaJgB' } = req.body;
     const apiKey = process.env.ELEVENLABS_API_KEY;
 
+    // Diagnostic logging (Hidden in Production, visible in Vercel Logs)
+    console.log(`TTS Request received. Key loaded: ${!!apiKey} (Length: ${apiKey?.length || 0})`);
+    if (apiKey) {
+        console.log(`Key snippet: ${apiKey.substring(0, 4)}...`);
+    }
+
     if (!apiKey) {
-        return res.status(500).json({ error: 'ELEVENLABS_API_KEY is not configured on the server' });
+        return res.status(500).json({ error: 'ELEVENLABS_API_KEY is not configured on the server. Please check your Vercel Environment Variables.' });
     }
 
     try {
