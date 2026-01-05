@@ -14,7 +14,7 @@ interface QuestionCardProps {
 }
 
 export const QuestionCard = ({ questionNumber, question, topic, difficulty, autoSpeak = true }: QuestionCardProps) => {
-  const { speak, stop, isSpeaking, isLoading, availableVoices, selectedVoice } = useTTSFree();
+  const { speak, stop, isSpeaking, isLoading } = useTTSFree();
 
   // Auto-speak question when component mounts or question changes (only if autoSpeak is true)
   useEffect(() => {

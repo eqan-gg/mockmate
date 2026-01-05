@@ -8,7 +8,7 @@ import { useSpeechRecognition } from "@/hooks/useSpeechRecognition";
 
 export const DiagnosticsPanel = () => {
     const [isOpen, setIsOpen] = useState(false);
-    const { availableVoices, selectedVoice, speak } = useTTSFree();
+    const { speak } = useTTSFree();
     const { isSupported, isListening, transcript, startListening, stopListening, resetTranscript } = useSpeechRecognition();
 
     const isMobile = /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini/i.test(navigator.userAgent);
@@ -84,19 +84,9 @@ export const DiagnosticsPanel = () => {
                     <h4 className="font-medium mb-2">Text-to-Speech</h4>
                     <div className="space-y-2 text-xs">
                         <div className="flex justify-between items-center">
-                            <span className="text-muted-foreground">Available Voices:</span>
-                            <Badge>{availableVoices.length}</Badge>
+                            <span className="text-muted-foreground">Provider:</span>
+                            <Badge>ElevenLabs</Badge>
                         </div>
-                        {selectedVoice && (
-                            <div className="bg-muted/50 p-2 rounded space-y-1">
-                                <div className="font-medium">{selectedVoice.name}</div>
-                                <div className="text-muted-foreground">
-                                    Lang: {selectedVoice.lang} |
-                                    {selectedVoice.localService ? " Local" : " Remote"} |
-                                    {selectedVoice.default ? " Default" : ""}
-                                </div>
-                            </div>
-                        )}
                         <Button
                             size="sm"
                             variant="outline"
